@@ -20,6 +20,8 @@
     # You can also split up your configuration and import pieces of it here:
     # ./users.nix
 
+    inputs.home-manager.nixosModules.home-manager
+
     # Import your generated (nixos-generate-config) hardware configuration
     ./hardware-configuration.nix
   ];
@@ -33,7 +35,7 @@
       outputs.overlays.unstable-packages
 
       # You can also add overlays exported from other flakes:
-      neovim-nightly-overlay.overlays.default
+      # neovim-nightly-overlay.overlays.default
 
       # Or define it inline, for example:
       # (final: prev: {
@@ -66,13 +68,70 @@
     };
   };
 
-  # FIXME: Add the rest of your current configuration
-
-  # TODO: Set your hostname
+  # Networking
+  networking.networkmanager.enable = true;
   networking.hostName = "nixos";
 
-  # TODO: This is just an example, be sure to use whatever bootloader you prefer
+  # Bluetooth
+  hardware.bluetooth.enable = true;
+  services.blueman.enable = true;
+
+  # Locale and timezone
+  time.timeZone = "Europe/Copenhagen";
+  i18n.defaultLocale = "en_DK.UTF-8";
+
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "da_DK.UTF-8";
+    LC_IDENTIFICATION = "da_DK.UTF-8";
+    LC_MEASUREMENT = "da_DK.UTF-8";
+    LC_MONETARY = "da_DK.UTF-8";
+    LC_NAME = "da_DK.UTF-8";
+    LC_NUMERIC = "da_DK.UTF-8";
+    LC_PAPER = "da_DK.UTF-8";
+    LC_TELEPHONE = "da_DK.UTF-8";
+    LC_TIME = "da_DK.UTF-8";
+  };
+
+  # Bootloader
   boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+
+  # System packages
+  environment.systemPackages = with pkgs; [
+    kitty
+    neovim
+    git
+  ];
+
+  # Window manager
+  programs.hyprland = {
+    enable = true;
+    xwayland.enable = true;
+  };
+  environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+  };
+
+  hardware = {
+    opengl.enable = true;
+    nvidia.modesetting.enable = true;
+  };
+  # services.xserver.videoDrivers = [ "displaylink" "modesetting" ];
+
+  # Audio
+  hardware.pulseaudio.enable = true;
+  hardware.pulseaudio.support32Bit = true;
+
+  # Homemanager
+    # Import home-manager's NixOS module
+
+  home-manager = {
+    extraSpecialArgs = { inherit inputs outputs; };
+    users = {
+      # Import your home-manager configuration
+      slinde = import ../home-manager/home.nix;
+    };
+  };
 
   # TODO: Configure your system-wide user settings (groups, etc), add more users as needed.
   users.users = {
@@ -87,7 +146,7 @@
         # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
       ];
       # TODO: Be sure to add any other groups you need (such as networkmanager, audio, docker, etc)
-      extraGroups = ["wheel", "audio", "network manager"];
+      extraGroups = ["wheel" "audio" "network manager"];
     };
   };
 
